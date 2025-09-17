@@ -7,7 +7,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 @Controller('tasks')
 export class TasksController {
     constructor(private readonly taskService: TasksService) { }
-    @Post('Board')
+    @Post('board')
     @UseGuards(JwtAuthGuard)
     async createBoard(@Body() body: CreateBoardDto, @Req() req) {
         const userId = req.user.id;
