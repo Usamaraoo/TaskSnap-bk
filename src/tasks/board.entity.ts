@@ -8,7 +8,7 @@ export class Board {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column({unique:true})
     title: string;
 
     @ManyToOne(() => User, (user) => user.board, { onDelete: 'CASCADE' })

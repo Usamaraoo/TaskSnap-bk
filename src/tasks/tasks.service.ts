@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Board } from './board.entity';
 import { Repository } from 'typeorm';
@@ -12,15 +12,23 @@ export class TasksService {
         private boardRepository: Repository<Board>,
         @InjectRepository(User) private userRepository: Repository<User>,
     ) { }
-
-    async createBoard(board: CreateBoardDto, userId: number): Promise<Board | null> {
-        const user = await this.userRepository.findOneBy({ id: userId })
-        console.log('user', user)
-        if (!user) {
-            throw new Error('User not found')
+    // create new board
+    async createBoard(board: CreateBoardDto, userId: number): Promise<Board | string> {
+        try {
+            const user = await this.userRepository.findOneBy({ id: userId })
+            console.log('user', user)
+            if (!user) {
+                throw new NotFoundException('User not found')
+            }
+            const newBoard = this.boardRepository.create({ ...board, user })
+            return await this.boardRepository.save(newBoard);
+        } catch (error) {
+            console.log('errrrr', error)
+            if (error.code === '23505') {
+                throw new BadRequestException("Board name already exists")
+            }
+            throw error
         }
-        // const borad = 
-        return null
     }
 
 }
