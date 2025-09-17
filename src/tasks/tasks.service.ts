@@ -4,6 +4,8 @@ import { Board } from './board.entity';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dtos/create-board.dto';
 import { User } from 'src/user/user.entity';
+import { CreateTaskDto } from './dtos/create-task-dto';
+import { Task } from './task.entity';
 
 @Injectable()
 export class TasksService {
@@ -13,7 +15,7 @@ export class TasksService {
         @InjectRepository(User) private userRepository: Repository<User>,
     ) { }
     // create new board
-    async createBoard(board: CreateBoardDto, userId: number): Promise<Board | string> {
+    async createBoard(board: CreateBoardDto, userId: number): Promise<Board | null> {
         try {
             const user = await this.userRepository.findOneBy({ id: userId })
             console.log('user', user)
@@ -29,6 +31,10 @@ export class TasksService {
             }
             throw error
         }
+    }
+
+    async createTask(body: CreateTaskDto): Promise<Task | null> {
+        return null
     }
 
 }
