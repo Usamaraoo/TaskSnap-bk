@@ -14,8 +14,8 @@ export class Task {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column('float')
-  position: number;
+  // @Column('float')
+  // position: number;
 
   @Column({
     type: 'enum',
