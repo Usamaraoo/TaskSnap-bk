@@ -32,6 +32,26 @@ export class TasksService {
             throw error
         }
     }
+    // get user board
+    async getUserBoard(userId: number): Promise<Board[] | null> {
+        try {
+            const user = await this.userRepository.findOneBy({ id: userId })
+            if (!user) {
+                throw new NotFoundException('User not found')
+            }
+            const boards = await this.boardRepository.find({
+                where: {
+                    user: { id: userId }
+                },
+            })
+            return boards;
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new BadRequestException("Board name already exists")
+            }
+            throw error
+        }
+    }
 
     async createTask(body: CreateTaskDto, userId: number): Promise<Task | null> {
         const { board, } = body
@@ -52,6 +72,27 @@ export class TasksService {
             board: userBoard,
         });
         return await this.taskRepository.save(newTask);
+    }
+
+    // get user tasks
+    async getUserTasks(board: string): Promise<Task[] | null> {
+        try {
+            const boradExists = await this.boardRepository.findOneBy({ id: board })
+            if (!boradExists) {
+                throw new NotFoundException('Board doesnt exists')
+            }
+            const tasksList = await this.taskRepository.find({
+                where: {
+                    board: { id: board }
+                },
+            })
+            return tasksList;
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new BadRequestException("Board name already exists")
+            }
+            throw error
+        }
     }
 
 }
