@@ -4,7 +4,8 @@ import { CreateBoardDto } from './dtos/create-board.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateTaskDto } from './dtos/create-task-dto';
 import { Task, TaskStatus } from './task.entity';
-import { UpdateTaskStatusDto } from './dtos/updae-task.dto';
+import { UpdateTaskStatusDto } from './dtos/update-task-status.dto';
+import { UpdateTaskDto } from './dtos/update-task.dto';
 
 @Controller('tasks')
 export class TasksController {
@@ -44,9 +45,14 @@ export class TasksController {
         return await this.taskService.getSingleTask(taskId);
     }
 
-    @Put('board/tasks/update/:taskId')
+    @Put('board/tasks/update/status/:taskId')
     @UseGuards(JwtAuthGuard)
     async updateTaskStatus(@Param('taskId') taskId: string, @Body() body: UpdateTaskStatusDto) {
+        return await this.taskService.updateTaskStatus(taskId, body);
+    }
+    @Put('board/tasks/update/:taskId')
+    @UseGuards(JwtAuthGuard)
+    async updateTask(@Param('taskId') taskId: string, @Body() body: UpdateTaskDto) {
         return await this.taskService.updateTaskStatus(taskId, body);
     }
 

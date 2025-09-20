@@ -7,7 +7,8 @@ import { User } from 'src/user/user.entity';
 import { CreateTaskDto } from './dtos/create-task-dto';
 import { Task } from './task.entity';
 import { TaskStatus } from './task.entity';
-import { UpdateTaskStatusDto } from './dtos/updae-task.dto';
+import { UpdateTaskStatusDto } from './dtos/update-task-status.dto';
+import { UpdateTaskDto } from './dtos/update-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -105,14 +106,16 @@ export class TasksService {
     }
 
     // update task status
-    //update task
-    async updateTaskStatus(id: string, status: UpdateTaskStatusDto): Promise<Task | null> {
+    async updateTaskStatus(id: string, body: UpdateTaskDto): Promise<Task> {
         try {
             const task = await this.taskRepository.findOne({ where: { id } });
+
             if (!task) {
                 throw new NotFoundException('Task not found');
             }
-            task.status = status.status;
+
+            Object.assign(task, body); // merge only provided fields
+
             return await this.taskRepository.save(task);
         } catch (error) {
             throw error
