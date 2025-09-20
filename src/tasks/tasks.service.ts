@@ -7,6 +7,7 @@ import { User } from 'src/user/user.entity';
 import { CreateTaskDto } from './dtos/create-task-dto';
 import { Task } from './task.entity';
 import { TaskStatus } from './task.entity';
+import { UpdateTaskStatusDto } from './dtos/updae-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -74,7 +75,7 @@ export class TasksService {
         return await this.taskRepository.save(newTask);
     }
 
-    // get user tasks
+    // get user tasks by board id
     async getUserTasks(board: string): Promise<Task[] | null> {
         try {
             const boradExists = await this.boardRepository.findOneBy({ id: board })
@@ -88,9 +89,32 @@ export class TasksService {
             })
             return tasksList;
         } catch (error) {
-            if (error.code === '23505') {
-                throw new BadRequestException("Board name already exists")
+
+            throw error
+        }
+    }
+    //update task
+    async getSingleTask(taskId: string): Promise<Task | null> {
+        try {
+            const task = await this.taskRepository.findOneBy({ id: taskId })
+            return task;
+        } catch (error) {
+
+            throw error
+        }
+    }
+
+    // update task status
+    //update task
+    async updateTaskStatus(id: string, status: UpdateTaskStatusDto): Promise<Task | null> {
+        try {
+            const task = await this.taskRepository.findOne({ where: { id } });
+            if (!task) {
+                throw new NotFoundException('Task not found');
             }
+            task.status = status.status;
+            return await this.taskRepository.save(task);
+        } catch (error) {
             throw error
         }
     }
