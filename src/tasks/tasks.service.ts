@@ -1,18 +1,125 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Board } from './board.entity';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dtos/create-board.dto';
+import { User } from 'src/user/user.entity';
+import { CreateTaskDto } from './dtos/create-task-dto';
+import { Task } from './task.entity';
+import { TaskStatus } from './task.entity';
+import { UpdateTaskStatusDto } from './dtos/update-task-status.dto';
+import { UpdateTaskDto } from './dtos/update-task.dto';
 
 @Injectable()
 export class TasksService {
     constructor(
         @InjectRepository(Board)
-        private userRepository: Repository<Board>,
+        private boardRepository: Repository<Board>,
+        @InjectRepository(User) private userRepository: Repository<User>,
+        @InjectRepository(Task) private taskRepository: Repository<Task>,
     ) { }
+    // create new board
+    async createBoard(board: CreateBoardDto, userId: number): Promise<Board | null> {
+        try {
+            const user = await this.userRepository.findOneBy({ id: userId })
+            if (!user) {
+                throw new NotFoundException('User not found')
+            }
+            const newBoard = this.boardRepository.create({ ...board, user })
+            return await this.boardRepository.save(newBoard);
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new BadRequestException("Board name already exists")
+            }
+            throw error
+        }
+    }
+    // get user board
+    async getUserBoard(userId: number): Promise<Board[] | null> {
+        try {
+            const user = await this.userRepository.findOneBy({ id: userId })
+            if (!user) {
+                throw new NotFoundException('User not found')
+            }
+            const boards = await this.boardRepository.find({
+                where: {
+                    user: { id: userId }
+                },
+            })
+            return boards;
+        } catch (error) {
+            if (error.code === '23505') {
+                throw new BadRequestException("Board name already exists")
+            }
+            throw error
+        }
+    }
 
-    async createBoard(board: CreateBoardDto,userId:string): Promise<Board | null> {
-        return null
+    async createTask(body: CreateTaskDto, userId: number): Promise<Task | null> {
+        const { board, } = body
+        const userBoard = await this.boardRepository.findOne({
+            where: { id: board },
+            relations: ['user'],
+        })
+        if (!userBoard) {
+            throw new NotFoundException("Board doesn't exists")
+        }
+        if (userBoard.user.id !== userId) {
+            throw new NotFoundException("Board doesn't belong to this user")
+        }
+        const newTask = this.taskRepository.create({
+            title: body.title,
+            description: body.description,
+            status: body.status ?? 'TODO',
+            board: userBoard,
+        });
+        return await this.taskRepository.save(newTask);
+    }
+
+    // get user tasks by board id
+    async getUserTasks(board: string): Promise<Task[] | null> {
+        try {
+            const boradExists = await this.boardRepository.findOneBy({ id: board })
+            if (!boradExists) {
+                throw new NotFoundException('Board doesnt exists')
+            }
+            const tasksList = await this.taskRepository.find({
+                where: {
+                    board: { id: board }
+                },
+            })
+            return tasksList;
+        } catch (error) {
+
+            throw error
+        }
+    }
+    //update task
+    async getSingleTask(taskId: string): Promise<Task | null> {
+        try {
+            const task = await this.taskRepository.findOneBy({ id: taskId })
+            return task;
+        } catch (error) {
+
+            throw error
+        }
+    }
+
+    // update task status
+    async updateTaskStatus(id: string, body: UpdateTaskDto): Promise<Task> {
+        try {
+            const task = await this.taskRepository.findOne({ where: { id } });
+
+            if (!task) {
+                throw new NotFoundException('Task not found');
+            }
+
+            Object.assign(task, body); // merge only provided fields
+
+            return await this.taskRepository.save(task);
+        } catch (error) {
+            throw error
+        }
     }
 
 }

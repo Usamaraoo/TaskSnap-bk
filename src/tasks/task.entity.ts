@@ -1,9 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
-import { ColumnEntity } from './column.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Board } from "./board.entity";
+
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
 @Entity('tasks')
 export class Task {
-  @PrimaryGeneratedColumn('uuid') id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   title: string;
@@ -11,10 +14,16 @@ export class Task {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Index()
-  @Column('float')
-  position: number;
+  // @Column('float')
+  // position: number;
 
-  @ManyToOne(() => ColumnEntity, (col) => col.tasks, { onDelete: 'CASCADE' })
-  column: ColumnEntity;
+  @Column({
+    type: 'enum',
+    enum: ['TODO', 'IN_PROGRESS', 'DONE'],
+    default: 'TODO',
+  })
+  status: TaskStatus;
+
+  @ManyToOne(() => Board, (board) => board.tasks, { onDelete: 'CASCADE' })
+  board: Board;
 }
